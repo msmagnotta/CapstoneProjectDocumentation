@@ -3,11 +3,98 @@ import userIcon from "../Assets/userIcon.png";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import recordingIcon from "../Assets/recording.png";
-import stopRecordingIcon from "../Assets/stopRecording.png"
+import stopRecordingIcon from "../Assets/stopRecording.png";
 const SignUp = () => {
   const navigate = useNavigate();
   const [steps, setSteps] = useState(0);
   const [isRecording, setRecording] = useState(false);
+  let gumStream = null;
+  // let recorder = null;
+  const [recorder, setRecorder] = useState(null)
+  let audioContext = null;
+  // let recorder
+  // let chunks =[]
+  // function SetupAudio() {
+  //   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  //     navigator.mediaDevices
+  //       .getUserMedia({ audio: true })
+  //       .then(SetupStream)
+  //       .catch((err) => console.log(err));
+  //   }
+  // }
+  // SetupAudio();
+  // function SetupStream(stream){
+  //   recorder = new MediaRecorder(stream)
+  //   recorder.ondataavailable  = e => {
+  //     chunks.push(e.data)
+  //   }
+  //   recorder.onstop = e => {
+  //     const blob = new Blob(chunks, {type: "audio/ogg; codecs=opus"})
+  //     chunks =[]
+  //     // const audioURL = window.URL.createObjectURL(blob)
+  //   }
+  // }
+
+  const startRecording = () => {
+    let constraints = {
+      audio: true,
+      video: false,
+    };
+
+    audioContext = new window.AudioContext();
+    console.log("sample rate: " + audioContext.sampleRate);
+
+    navigator.mediaDevices
+      .getUserMedia(constraints)
+      .then(function (stream) {
+        console.log("initializing Recorder.js ...");
+
+        gumStream = stream;
+
+        let input = audioContext.createMediaStreamSource(stream);
+
+        setRecorder(new window.Recorder(input, {
+          numChannels: 1,
+        }));
+
+        recorder.record();
+        console.log("Recording started");
+      })
+      .catch(function (err) {
+        //enable the record button if getUserMedia() fails
+        console.log(err)
+      });
+  };
+
+  const stopRecording = () => {
+    console.log("stopButton clicked");
+
+    recorder.stop(); //stop microphone access
+    gumStream.getAudioTracks()[0].stop();
+
+    recorder.exportWAV(onStop);
+  };
+
+  const onStop = (blob) => {
+    console.log("uploading...");
+
+    let data = new FormData();
+
+    data.append("text", "this is the transcription of the audio file");
+    data.append("wavfile", blob, "recording.wav");
+
+    fetch("http://localhost:3001/voice/register", {
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, *cors, same-origin
+      cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "same-origin", // include, *same-origin, omit
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      data: data,
+    });
+  };
+
   return (
     <div className="wrapper fadeInDown">
       {steps === 0 && (
@@ -66,19 +153,32 @@ const SignUp = () => {
               placeholder="username"
             />
             <div>
-              {isRecording === false && <img
-                className="recording"
-                src={recordingIcon}
-                alt="Recording Icon"
-                onClick={()=> setRecording(!isRecording)}
-              />}
-              {isRecording === true && <img
-                className="recording"
-                src={stopRecordingIcon}
-                alt="Stop recording Icon"
-                onClick={()=> setRecording(!isRecording)}
-
-              />}
+              {isRecording === false && (
+                <img
+                  className="recording"
+                  src={recordingIcon}
+                  alt="Recording Icon"
+                  onClick={() => {
+                    if (!isRecording) {
+                      startRecording();
+                    }
+                    setRecording(!isRecording);
+                  }}
+                />
+              )}
+              {isRecording === true && (
+                <img
+                  className="recording"
+                  src={stopRecordingIcon}
+                  alt="Stop recording Icon"
+                  onClick={() => {
+                    if (isRecording) {
+                      stopRecording();
+                    }
+                    setRecording(!isRecording);
+                  }}
+                />
+              )}
             </div>
             <input type="submit" className="fadeIn fourth" value="Sign Up" />
           </form>
