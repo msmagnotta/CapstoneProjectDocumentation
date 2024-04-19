@@ -68,7 +68,7 @@ const consumeMessages = async (topic) => {
         eachMessage: async ({ topic, partition, message }) => {
             try {
                 console.log({
-                    value: "Topic: " + topic + "\nKafka Consumer: " + message.value.toString(),
+                    value: "{Topic: " + topic + "} Kafka Consumer: " + message.value.toString(),
                 });
             } catch (error) {
                 console.error('Error processing message:', error);

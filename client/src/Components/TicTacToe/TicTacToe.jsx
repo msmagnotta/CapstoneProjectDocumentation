@@ -9,7 +9,8 @@ export const TicTacToe = () => {
   const [gameMessage, setGameMessage] = useState("");
   const [isReady, setIsReady] = useState(false);
   const [showHome, setShowHome] = useState(false);
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const intervalRef = useRef(null); // Ref to hold the interval ID
   const onPlay = () => {
     setShowHome(true);
   };
@@ -26,17 +27,16 @@ export const TicTacToe = () => {
   // let intervalID = setInterval(winner === '' ? waitForYourTurn : null, 5000)
 
   useEffect(() => {
-    console.log("Hey");
     if (roomID !== null && winner === "") {
-      setIntervalID(
-        setInterval(async () => {
-          await waitForYourTurn();
-        }, 5000)
-      );
+      intervalRef.current = setInterval(async () => {
+        await waitForYourTurn();
+      }, 5000);
     }
 
-    if (winner !== "") clearInterval(intervalID);
+    // Clear the interval when a winner is determined or component unmounts
+    return () => clearInterval(intervalRef.current);
   }, [roomID, winner]);
+
   useEffect(() => {
     // console.log(grid)
     // console.log(winner)
@@ -173,7 +173,8 @@ export const TicTacToe = () => {
   // Function to handle back button click
   const handleBack = () => {
     reset(); // Reset the game
-    navigate('/')  };
+    navigate('/')
+  };
 
   // Function to wait for player's turn
   async function waitForYourTurn() {
@@ -207,8 +208,7 @@ export const TicTacToe = () => {
     }
   }, [winner]);
 
-  // Call waitForYourTurn function every 5 seconds
-  setTimeout(winner === '' ? waitForYourTurn : null, 5000);
+
 
   /* TO DO: 
     Provide user feedback on what is going on. Currently only displays a message and requires user to go through the steps in order: Join game, then set ready.
@@ -226,15 +226,15 @@ export const TicTacToe = () => {
 
       <div className="board">
         <div className="row boxHeadersTopMargin">
-          <div className="boxHeaderTop">A</div>
-          <div className="boxHeaderTop">B</div>
-          <div className="boxHeaderTop">C</div>
+          <div className="boxHeaderTop">0</div>
+          <div className="boxHeaderTop">1</div>
+          <div className="boxHeaderTop">2</div>
         </div>
         <div className="row ">
           <div className="col boxHeadersLeftMargin">
-            <div className="boxHeaderLeft">0</div>
-            <div className="boxHeaderLeft">1</div>
-            <div className="boxHeaderLeft">2</div>
+            <div className="boxHeaderLeft">A</div>
+            <div className="boxHeaderLeft">B</div>
+            <div className="boxHeaderLeft">C</div>
           </div>
           <div className="flex-wrap">
             {grid.map((row, rowIndex) => {

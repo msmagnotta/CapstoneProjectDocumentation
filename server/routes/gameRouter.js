@@ -18,13 +18,14 @@ router.get("/", async function (req, res, next) {});
    Requires move sent through Post body */
 router.post("/move", async function (req, res, next) {
   if(routerFunction.move(req, res, rooms) === true){
-    produceMessage(globalRoomId, 'key1', "Player 1 selected " + req.body.move)
+    produceMessage(globalRoomId, 'key1', "Player " + req.headers.origin + " selected " + req.body.move)
   }
 });
 
 /* reset Every room. TO DO: Only reset current game. */
 router.get("/reset", function (req, res, next) {
   console.log("GET /reset");
+  produceMessage(globalRoomId, 'key1', "Game Reset")
   rooms = [];
   res.status(200).send("Successfully reset");
 });
@@ -39,7 +40,7 @@ router.get("/ready", async function (req, res, next) {
   let newGame = !(readyStatus === undefined)
   if (newGame) {
     globalRoomId = readyStatus
-    createTopic(globalRoomId)
+    await createTopic(globalRoomId)
     consumeMessages(globalRoomId)
     produceMessage(globalRoomId, 'key1', "Game Started")
   }
@@ -49,7 +50,12 @@ router.get("/ready", async function (req, res, next) {
    This route is also used after a user makes a move, in order to wait for his turn.
    The player turn is determined based on the index of the player inside the room. */
 router.get("/waitTurn", async function (req, res, next) {
-  routerFunction.waitTurn(req, res, rooms);
+  console.log("GET /waitTurn")
+  potentialWinner = routerFunction.waitTurn(req, res, rooms)
+
+  if(potentialWinner !== undefined) {
+    produceMessage(globalRoomId, 'key1', "Player " + potentialWinner + " Wins!")
+  }
 });
 
 module.exports = router;

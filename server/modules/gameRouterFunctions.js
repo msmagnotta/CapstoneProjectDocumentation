@@ -87,7 +87,13 @@ function waitTurn(req, res, rooms) {
   /* If the game is over, let the client know. Clients should stop any subsequent calls to this route. (TO DO) */
   if (room.game.state.isOver) {
     res.status(200).json({ message: 'The winner has been decided', playerTurn: false, grid: room.game.state.grid, winner: room.game.checkWinner() })
-    return
+    if (room.game.checkWinner() === 'O'){
+      return room.playersInRoom[0].player
+    } else if (room.game.checkWinner() === 'X'){
+      return room.playersInRoom[1].player
+    } else {
+      return room.game.checkWinner();
+    }
   }
 
   /* Determines whose turn it is and sends back the updated game grid */

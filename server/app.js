@@ -17,7 +17,7 @@ app.use(cors())
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use('/game', gameRouter);
-app.listen(port, () => console.log('Example app is listening on port ' + port +'.' ));
+const server = app.listen(port, () => console.log('Example app is listening on port ' + port +'.' ));
 
 
 // Kafka setup
@@ -40,4 +40,8 @@ process.on('SIGINT', async () => {
     console.log('Shutting down server...');
     await kafkaService.disconnectKafka();
     console.log('Kafka disconnected');
+    server.close(() => {
+        console.log('Server stopped');
+        process.exit(0);
+    });
 });
