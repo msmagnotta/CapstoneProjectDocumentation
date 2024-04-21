@@ -2,11 +2,11 @@ const { Kafka } = require('kafkajs');
 
 const kafka = new Kafka({
     clientId: 'tictalktoe',
-    brokers: ['192.168.67.2:30005'],
+    brokers: ['192.168.49.2:30001'],
     sasl: {
         mechanism: 'plain',
         username: 'user1',
-        password: '50oyrgdy7f'
+        password: '5tskcsHkGx'
     },
 });
 
