@@ -1,9 +1,9 @@
 const express = require("express");
 const routerFunction = require("../modules/gameRouterFunctions");
-const router = express.Router();
 const Game = require("../modules/Game");
 const Room = require("../modules/Room");
 const uuid = require("uuid");
+const router = express.Router();
 
 let rooms = []; /* Stores Room objects*/
 /* Finds the next available room by finding the first non full room */
@@ -20,9 +20,7 @@ router.post("/move", async function (req, res, next) {
 
 /* reset Every room. TO DO: Only reset current game. */
 router.get("/reset", function (req, res, next) {
-  console.log("GET /reset");
-  rooms = [];
-  res.status(200).send("Successfully reset");
+  routerFunction.reset(req,res,rooms)
 });
 
 /* Route for client to join a room. Required before starting a game. */
@@ -41,4 +39,11 @@ router.get("/waitTurn", async function (req, res, next) {
   routerFunction.waitTurn(req, res, rooms);
 });
 
+/* To do: Disconnect user after idle time so we can delete rooms.*/
+/* To do: Delete everyroom that have 0 players every 1 hour *
+/* To do: ask for a rematch? Need specific route listening for that request, so that we can update states in client and restart the waitTurn calls.*/
+/* Testing route to get real time information about the variable Rooms */
+router.get('/rooms', async function(req,res,next){
+  res.json(rooms)
+})
 module.exports = router;

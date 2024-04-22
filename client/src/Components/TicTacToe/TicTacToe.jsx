@@ -14,6 +14,7 @@ export const TicTacToe = () => {
     setShowHome(true);
   };
   const [intervalID, setIntervalID] = useState(null);
+  // let intervalID = null
   const [grid, setGrid] = useState([
     ["", "", ""] /*A0 A1 A2 */,
     ["", "", ""] /*B0 B1 B2 */,
@@ -29,13 +30,18 @@ export const TicTacToe = () => {
     console.log("Hey");
     if (roomID !== null && winner === "") {
       setIntervalID(
+        // intervalID = 
         setInterval(async () => {
           await waitForYourTurn();
         }, 5000)
+        
       );
+      console.log("Creating new IntervalID: " + intervalID)
     }
 
-    if (winner !== "") clearInterval(intervalID);
+      console.log("Clearing interval ID: " + intervalID)
+      clearInterval(intervalID);
+    
   }, [roomID, winner]);
   useEffect(() => {
     // console.log(grid)
@@ -208,7 +214,7 @@ export const TicTacToe = () => {
   }, [winner]);
 
   // Call waitForYourTurn function every 5 seconds
-  setTimeout(winner === '' ? waitForYourTurn : null, 5000);
+  // setTimeout(winner === '' ? waitForYourTurn : null, 5000);
 
   /* TO DO: 
     Provide user feedback on what is going on. Currently only displays a message and requires user to go through the steps in order: Join game, then set ready.
