@@ -1,10 +1,13 @@
 const express = require("express");
 const routerFunction = require("../modules/gameRouterFunctions");
-const router = express.Router();
 const Game = require("../modules/Game");
 const Room = require("../modules/Room");
 const uuid = require("uuid");
-const { createTopic, produceMessage, consumeMessages } = require('../kafka/kafkaService');
+let { createTopic, produceMessage, consumeMessages } = require('../kafka/kafkaService');
+/** Turn this value to true to enable kafka commands */
+const enableKafka = false
+const router = express.Router();
+
 
 let globalRoomId = null;
 let rooms = []; /* Stores Room objects*/
@@ -18,16 +21,22 @@ router.get("/", async function (req, res, next) {});
    Requires move sent through Post body */
 router.post("/move", async function (req, res, next) {
   if(routerFunction.move(req, res, rooms) === true){
-    produceMessage(globalRoomId, 'key1', "Player " + req.headers.origin + " selected " + req.body.move)
+    if(enableKafka){
+      produceMessage(globalRoomId, 'key1', "Player " + req.headers.origin + " selected " + req.body.move)
+    } 
   }
 });
 
 /* reset Every room. TO DO: Only reset current game. */
 router.get("/reset", function (req, res, next) {
   console.log("GET /reset");
-  produceMessage(globalRoomId, 'key1', "Game Reset")
+  
+  if(enableKafka){
+    produceMessage(globalRoomId, 'key1', "Game Reset")
+
+  }
   rooms = [];
-  res.status(200).send("Successfully reset");
+  routerFunction.reset(req,res,rooms)
 });
 
 /* Route for client to join a room. Required before starting a game. */
@@ -38,7 +47,7 @@ router.get("/join", async function (req, res, next) {
 router.get("/ready", async function (req, res, next) {
   const readyStatus = routerFunction.ready(req, res, rooms);
   let newGame = !(readyStatus === undefined)
-  if (newGame) {
+  if (newGame && enableKafka) {
     globalRoomId = readyStatus
     await createTopic(globalRoomId)
     consumeMessages(globalRoomId)
@@ -53,9 +62,17 @@ router.get("/waitTurn", async function (req, res, next) {
   console.log("GET /waitTurn")
   potentialWinner = routerFunction.waitTurn(req, res, rooms)
 
-  if(potentialWinner !== undefined) {
+  if(potentialWinner !== undefined && enableKafka) {
     produceMessage(globalRoomId, 'key1', "Player " + potentialWinner + " Wins!")
   }
 });
 
-module.exports = router;
+/* To do: Disconnect user after idle time so we can delete rooms.*/
+/* To do: Delete everyroom that have 0 players every 1 hour *
+/* To do: ask for a rematch? Need specific route listening for that request, so that we can update states in client and restart the waitTurn calls.*/
+/* Testing route to get real time information about the variable Rooms */
+router.get('/rooms', async function(req,res,next){
+  res.json(rooms)
+})
+const gameRouter=router
+module.exports = {gameRouter, rooms};

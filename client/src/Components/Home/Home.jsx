@@ -16,7 +16,6 @@ const games = [
         imgSrc: '/path/to/game2/image', // Replace with actual image path
         playAction: () => console.log('Play Game 2') // Placeholder action
     },
-    // Add more games as placeholders
 ];
 
 
@@ -40,7 +39,7 @@ const Home = () => {
                                 <a href="https://www.google.com/">Contact Us</a>
                             </div>
                         </div>
-                        <button className="sign-up-btn">Sign Up</button>
+                        <button className="sign-up-btn" onClick={()=> navigate('/signup')}>Sign Up</button>
                         <button className="sign-in-btn" onClick={()=> navigate('/login')}>Sign In</button>
                     </nav>
                 </div>

@@ -3,6 +3,8 @@ import "./TicTacToe.css";
 import circle_icon from "../Assets/circle.png";
 import cross_icon from "../Assets/cross.png";
 import { useNavigate } from "react-router-dom";
+import VoiceRecording from "../Auth/VoiceRecording";
+import SubmitPlayButton from "../Miscellaneous/SubmitPlayButton";
 export const TicTacToe = () => {
   // const delay = ms => new Promise(res => setTimeout(res, ms)); /* Delay use to ask server if it is player turn and update grid*/
   const [roomID, setRoomID] = useState(null);
@@ -10,11 +12,15 @@ export const TicTacToe = () => {
   const [isReady, setIsReady] = useState(false);
   const [showHome, setShowHome] = useState(false);
   const navigate = useNavigate();
+  const [userAudioAsBlob, setUserAudioAsBlob] = useState(null);
+  const [status, setStatus] = useState(null)
+  const [transcription, setTranscription] = useState("")
   const intervalRef = useRef(null); // Ref to hold the interval ID
   const onPlay = () => {
     setShowHome(true);
   };
   const [intervalID, setIntervalID] = useState(null);
+  // let intervalID = null
   const [grid, setGrid] = useState([
     ["", "", ""] /*A0 A1 A2 */,
     ["", "", ""] /*B0 B1 B2 */,
@@ -28,13 +34,17 @@ export const TicTacToe = () => {
 
   useEffect(() => {
     if (roomID !== null && winner === "") {
-      intervalRef.current = setInterval(async () => {
-        await waitForYourTurn();
-      }, 5000);
+      setIntervalID(
+        // intervalID =
+        setInterval(async () => {
+          await waitForYourTurn();
+        }, 5000)
+      );
+      console.log("Creating new IntervalID: " + intervalID);
     }
 
-    // Clear the interval when a winner is determined or component unmounts
-    return () => clearInterval(intervalRef.current);
+    console.log("Clearing interval ID: " + intervalID);
+    clearInterval(intervalID);
   }, [roomID, winner]);
 
   useEffect(() => {
@@ -63,6 +73,40 @@ export const TicTacToe = () => {
         /* Sets room ID to the id of the room the server put you in. */
         setRoomID(res.roomID);
       });
+  }
+  async function moveAudio() {
+    if(userAudioAsBlob === null 
+      //|| !playerTurn
+      ){
+        console.log('no audio')
+      return
+    }
+    console.log(userAudioAsBlob)
+    let formData = new FormData();
+    let file = new File([userAudioAsBlob], "audio.mp3", {
+      type: "audio/mpeg",
+    });
+    console.log(file)
+    formData.append("file", file);
+    formData.append("voiceUrl", URL.createObjectURL(userAudioAsBlob))
+    console.log("Sending audio to server")
+    fetch("http://localhost:3001/audio/move", {
+      method: "POST", // *GET, POST, PUT, DELETE, etc.
+      body: formData,
+    }).then(res => res.json()).then((res)=> {
+      console.log(res)
+      if (res.isAccepted) {
+        console.log("Move accepted , should update grid");
+        console.log(res.grid);
+        setPlayerTurn(false);
+        setTranscription(res.transcription)
+        setGrid(res.grid);
+        if (res.winner !== "") {
+          setWinner(res.winner);
+        }
+        waitForYourTurn();
+      }
+    });
   }
 
   /* Runs after you joined a room. Sets the player status to ready. Once both players have set to ready, game will start. */
@@ -153,7 +197,7 @@ export const TicTacToe = () => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ move: move, roomID: roomID }),
+      body: JSON.stringify({ move: move, roomID: roomID, type: 'click' }),
     })
       .then((res) => res.json())
       .then(async (res) => {
@@ -173,42 +217,42 @@ export const TicTacToe = () => {
   // Function to handle back button click
   const handleBack = () => {
     reset(); // Reset the game
-    navigate('/')
+    navigate("/");
   };
 
   // Function to wait for player's turn
   async function waitForYourTurn() {
-    if (roomID === null || winner !== '') return; // If no roomID or winner found, return
+    if (roomID === null || winner !== "") return; // If no roomID or winner found, return
     // Fetch data from server
-    fetch('http://localhost:3001/game/waitTurn/', {
+    fetch("http://localhost:3001/game/waitTurn/", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
       },
-    }).then(res => res.json()).then(async res => {
-      setGameMessage(res.message); // Set game message
-      if (res.grid) {
-        setGrid(res.grid); // Update grid if available
-      }
-      if (res.playerTurn) {
-        setPlayerTurn(res.playerTurn); // Set player's turn
-      }
-      if (res.winner) {
-        setWinner(res.winner); // Set winner if available
-      }
-    });
+    })
+      .then((res) => res.json())
+      .then(async (res) => {
+        setGameMessage(res.message); // Set game message
+        if (res.grid) {
+          setGrid(res.grid); // Update grid if available
+        }
+        if (res.playerTurn) {
+          setPlayerTurn(res.playerTurn); // Set player's turn
+        }
+        if (res.winner) {
+          setWinner(res.winner); // Set winner if available
+        }
+      });
   }
 
   // Use effect to update game UI based on winner
   useEffect(() => {
     if (winner === "X") {
-      titleRef.current.innerHTML = 'Winner:   <img src=' + cross_icon + '>';
+      titleRef.current.innerHTML = "Winner:   <img src=" + cross_icon + ">";
     } else if (winner === "O") {
-      titleRef.current.innerHTML = 'Winner:   <img src=' + circle_icon + '>';
+      titleRef.current.innerHTML = "Winner:   <img src=" + circle_icon + ">";
     }
   }, [winner]);
-
-
 
   /* TO DO: 
     Provide user feedback on what is going on. Currently only displays a message and requires user to go through the steps in order: Join game, then set ready.
@@ -223,72 +267,80 @@ export const TicTacToe = () => {
       <h1 className="title" ref={titleRef}>
         Tic Talk Toe
       </h1>
-
-      <div className="board">
-        <div className="row boxHeadersTopMargin">
-          <div className="boxHeaderTop">0</div>
-          <div className="boxHeaderTop">1</div>
-          <div className="boxHeaderTop">2</div>
-        </div>
-        <div className="row ">
-          <div className="col boxHeadersLeftMargin">
-            <div className="boxHeaderLeft">A</div>
-            <div className="boxHeaderLeft">B</div>
-            <div className="boxHeaderLeft">C</div>
+      <div className="">
+        <div className="board">
+          <div className="row boxHeadersTopMargin">
+            <div className="boxHeaderTop">0</div>
+            <div className="boxHeaderTop">1</div>
+            <div className="boxHeaderTop">2</div>
           </div>
-          <div className="flex-wrap">
-            {grid.map((row, rowIndex) => {
-              // console.log(row)
-              let cellDivArr = grid[rowIndex].map((cell, columnIndex) => {
-                let id = `box${rowIndex}${columnIndex}`;
-                let rowValue;
-                switch (rowIndex) {
-                  case 0:
-                    rowValue = "A";
-                    break;
+          <div className="row ">
+            <div className="col boxHeadersLeftMargin">
+              <div className="boxHeaderLeft">A</div>
+              <div className="boxHeaderLeft">B</div>
+              <div className="boxHeaderLeft">C</div>
+            </div>
+            <div className="flex-wrap">
+              {grid.map((row, rowIndex) => {
+                // console.log(row)
+                let cellDivArr = grid[rowIndex].map((cell, columnIndex) => {
+                  let id = `box${rowIndex}${columnIndex}`;
+                  let rowValue;
+                  switch (rowIndex) {
+                    case 0:
+                      rowValue = "A";
+                      break;
 
-                  case 1:
-                    rowValue = "B";
-                    break;
-                  case 2:
-                    rowValue = "C";
-                    break;
-                  default:
-                }
-                let cellValue;
-                let cellIcon = "";
-                if (grid[rowIndex][columnIndex] !== "") {
-                  if (grid[rowIndex][columnIndex] === "X") {
-                    cellIcon = <img alt="X" src={cross_icon} />;
-                  } else {
-                    cellIcon = <img alt="X" src={circle_icon} />;
+                    case 1:
+                      rowValue = "B";
+                      break;
+                    case 2:
+                      rowValue = "C";
+                      break;
+                    default:
                   }
-                }
-                const colValue = columnIndex % 3;
+                  let cellValue;
+                  let cellIcon = "";
+                  if (grid[rowIndex][columnIndex] !== "") {
+                    if (grid[rowIndex][columnIndex] === "X") {
+                      cellIcon = <img alt="X" src={cross_icon} />;
+                    } else {
+                      cellIcon = <img alt="X" src={circle_icon} />;
+                    }
+                  }
+                  const colValue = columnIndex % 3;
 
-                cellValue = `${rowValue}${colValue}`;
-                // console.log(cellValue)
+                  cellValue = `${rowValue}${colValue}`;
+                  // console.log(cellValue)
+                  return (
+                    <div
+                      className="boxes"
+                      id={id}
+                      value={cellValue}
+                      key={cellValue}
+                      onClick={(e) => {
+                        gridCellToggle(e, rowIndex, columnIndex);
+                      }}
+                    >
+                      {cellIcon}
+                    </div>
+                  );
+                });
+
                 return (
-                  <div
-                    className="boxes"
-                    id={id}
-                    value={cellValue}
-                    key={cellValue}
-                    onClick={(e) => {
-                      gridCellToggle(e, rowIndex, columnIndex);
-                    }}
-                  >
-                    {cellIcon}
+                  <div className="row" key={rowIndex}>
+                    {cellDivArr}
                   </div>
                 );
-              });
-
-              return <div className="row" key={rowIndex}>{cellDivArr}</div>;
-            })}
+              })}
+            </div>
           </div>
         </div>
+        <VoiceRecording setAudio={setUserAudioAsBlob}/>
+        <div>{transcription}</div>
       </div>
       <div className="gameMessage">{gameMessage}</div>
+
 
       <button className="game-button" onClick={reset}>
         Reset
@@ -296,9 +348,10 @@ export const TicTacToe = () => {
       <button className="game-button" onClick={joinGame}>
         Join Game
       </button>
-      <button className="game-button" disabled={isReady} onClick={startGame}>
+      <button className="game-button" /*disabled={isReady}*/ onClick={startGame}>
         Ready
       </button>
+      <SubmitPlayButton onSubmit={moveAudio} status={status}/>
     </div>
   );
 };

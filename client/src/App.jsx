@@ -6,6 +6,8 @@ import Login from './Components/Auth/Login.jsx'; /* Import the Login component *
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom"; /* More info available at https://reactrouter.com/en/main/router-components/browser-router  */
 import SignUp from './Components/Auth/SignUp.jsx';
+import VoiceRecording from './Components/Auth/VoiceRecording.jsx';
+import SubmitPlayButton from './Components/Miscellaneous/SubmitPlayButton.jsx';
 
 function App({onBack}) {
 
@@ -44,6 +46,8 @@ function App({onBack}) {
         <Route element={<Login/>} path="/login" />
         <Route element={<SignUp/>} path="/signup" />
         <Route element= {<TicTacToe/>} path='/Tic-Talk-Toe'/>
+        <Route element= {<VoiceRecording/>} path='/VoiceRecording'/>
+        <Route element= {<SubmitPlayButton/>} path='/SubmitPlay'/>
       </Routes>
     </BrowserRouter>
   );

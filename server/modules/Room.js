@@ -4,7 +4,7 @@ const Game = require('../modules/Game');
 // Define the Room class
 class Room {
     constructor(id) {
-        this.roomId = id; // Room ID
+        this.roomID = id; // Room ID
         this.roomSize = 2; // Max number of players in room
         this.playersInRoom = []; // Array to store players in room
         this.game = null; // Game object

@@ -1,6 +1,10 @@
+const Room = require("../modules/Room");
+const uuid = require("uuid");
+const { convertAudioToMove } = require("./AudioTranscription");
 
-const Room = require('../modules/Room')
-const uuid = require('uuid')
+function findNextAvailableRoom(rooms) {
+  return rooms.find((room) => !room.isFull());
+}
 
 
 function findNextAvailableRoom(rooms) {
@@ -33,17 +37,18 @@ function join(req, res, rooms) {
   res.status(200).json({ roomID: room.roomId })
 }
 
+
 function ready(req, res, rooms) {
-  console.log("GET /ready")
-  let player = req.headers.origin
+  console.log("GET /ready");
+  let player = req.headers.origin;
   /* Find player room */
-  const room = findPlayerRoom(player, rooms)
+  const room = findPlayerRoom(player, rooms);
   if (room === undefined) {
-    res.status(401).json({ message: "Player not in a room" })
-    return
+    res.status(401).json({ message: "Player not in a room" });
+    return;
   }
   /* Finds the index of the player inside the room. The index is then used to update the status of that player */
-  let playerIndex = room.indexOfPlayer(player)
+  let playerIndex = room.indexOfPlayer(player);
   /* Set player status to ready*/
   room.playersInRoom[playerIndex].status = 'Ready'
   let areAllPlayersReady = room.areAllReady()
@@ -78,9 +83,9 @@ function waitTurn(req, res, rooms) {
   if (room.game === null) {
     res.status(200).json({ message: 'Waiting for game to start', playerTurn: false })
     return
-  }
+}
   /* Finds the index of the current player in the room */
-  let indexOfPlayer = room.indexOfPlayer(player)
+  let indexOfPlayer = room.indexOfPlayer(player);
   /* Room.game.state.playerTurn is a boolean used to track whose turn it is. We use that boolean, turn it to either 0 / 1 which are the possibles
      indexes for the player, in order to determine whose turn it is. Client only knows whether it is his turn or not.  */
   let playerTurn = room.game.state.playerTurn ? 1 : 0
@@ -95,7 +100,6 @@ function waitTurn(req, res, rooms) {
       return room.game.checkWinner();
     }
   }
-
   /* Determines whose turn it is and sends back the updated game grid */
   if (indexOfPlayer === playerTurn) {
     res.status(200).json({ message: 'It is now your turn', playerTurn: true, grid: room.game.state.grid })
@@ -106,9 +110,9 @@ function waitTurn(req, res, rooms) {
   }
 }
 
-function move(req, res, rooms) {
-  console.log(`Post /move `);
-  console.log(rooms);
+function processMove(move, rooms, req, res){
+  // console.log(`Post /moveALL `);
+  // console.log(rooms);
   let room = findPlayerRoom(req.headers.origin, rooms);
   /* Checks if client is inside a room */
   if (room === undefined) {
@@ -122,7 +126,7 @@ function move(req, res, rooms) {
     return;
   }
   /* TO DO: Make sure that the move is sent in the correct format: {A/B/C}{0/1/2} such as 'A0' */
-  if (req.body.move === null) {
+  if (move === null) {
     res.status(401).json({ message: "Move not valid" });
     return;
   }
@@ -136,7 +140,7 @@ function move(req, res, rooms) {
   /* Process user move and updates game state.
      If move is valid, returns updated state.
      If move not valid, no change in game grid*/
-  if (game.handleTurn(req.body.move)) {
+  if (game.handleTurn(move)) {
     returnValue.isAccepted = true;
     console.log("User move accepted, proceed with grid changes");
   }
@@ -160,6 +164,60 @@ function move(req, res, rooms) {
     // room = null
     // rooms.splice(rooms.indexOf(room), 1)
   }
-  return returnValue.isAccepted
 }
-module.exports = { findNextAvailableRoom, findPlayerRoom, join, ready, waitTurn, move }
+function move(req, res, rooms) {
+  console.log(`Post /move `);
+  // console.log(rooms);
+  console.log(req.body)
+  console.log(req.file)
+  let room = findPlayerRoom(req.headers.origin, rooms);
+  /** Possible values 'click', 'audio' */
+  let moveType = req.body.type 
+  /* Checks if client is inside a room */
+  if (room === undefined) {
+    console.log("Player not in a room");
+    res.status("200").json({ message: "Player not in in a room" });
+    return;
+  }
+  let game = room.game;
+  if (Object.keys(req.body).length === 0) {
+    res.status(207).json({message: "Error, body is empty"});
+    return;
+  }
+  let move = moveType === 'audio'? convertAudioToMove(req.body.file): req.body.move
+  if(move === null){
+    console.log("Could not detect valid moves, try again")
+    res.status(201).json(
+      { message: "Could not detect valid moves, try again", playerTurn: false }
+    )
+    return
+  }
+  return processMove(move, rooms, req, res)
+  
+}
+
+function reset(req,res,rooms){
+  console.log("GET /reset");
+  const player = req.headers.origin;
+  const roomToReset = findPlayerRoom(player, rooms);
+  if(roomToReset === undefined){
+    /* Player not in a room or Room does not exist*/
+    res.status(401).json({ message: "Player not in a room", playerTurn: false });
+    return;
+  }
+/* Player in valid Room */
+  let indexToDelete = rooms.indexOf(roomToReset)
+  rooms.splice(indexToDelete,1)
+  res.status(200).send("Successfully reset");
+
+}
+module.exports = {
+  findNextAvailableRoom,
+  findPlayerRoom,
+  join,
+  ready,
+  waitTurn,
+  move,
+  processMove,
+  reset
+};
