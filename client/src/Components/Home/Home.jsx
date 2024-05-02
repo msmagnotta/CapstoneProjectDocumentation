@@ -35,7 +35,7 @@ const Home = () => {
                         <div className="dropdown">
                             <button className="dropbtn">About</button>
                             <div className="dropdown-content">
-                                <a href="https://www.google.com/">Our Story</a>
+                                <a href="https://tinyurl.com/38fe6tk7">Meet the Team</a>
                                 <a href="https://www.google.com/">How it Works</a>
                                 <a href="https://www.google.com/">Contact Us</a>
                             </div>
