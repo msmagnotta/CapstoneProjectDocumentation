@@ -61,6 +61,22 @@ function findNextAvailableRoom(rooms){
   /* Any subsequent calls to /ready will return Game already started */
   res.status(200).json({message: "Game already started"})
   }
+
+  function rematch(req, res, rooms) {
+    let player = req.headers.origin;
+    let room = findPlayerRoom(player, rooms);
+    if (room === undefined) {
+        res.status(401).json({ message: "Player not in a room" });
+        return;
+    }
+    const rematchStarted = room.handleRematchRequest(player);
+    if (rematchStarted) {
+        res.status(200).json({ message: "Rematch started" });
+    } else {
+        res.status(200).json({ message: "Waiting for the other player for a rematch" });
+    }
+}
+
   function waitTurn(req,res, rooms){
     console.log("GET /waitTurn")
   let player = req.headers.origin
@@ -151,4 +167,5 @@ function findNextAvailableRoom(rooms){
     // rooms.splice(rooms.indexOf(room), 1)
   }
   }
-  module.exports = {findNextAvailableRoom, findPlayerRoom, join, ready, waitTurn, move}
+
+  module.exports = {findNextAvailableRoom, findPlayerRoom, join, ready, waitTurn, move, rematch}

@@ -10,6 +10,7 @@ class Room {
         this.game = null; // Game object
         this.status = 'inactive'; // Room status
         this.numPlayers = 0; // Number of players in room
+        this.rematchRequested = []; // Array to track rematch requests
     }
 
     // Check if the room is full
@@ -22,15 +23,32 @@ class Room {
         return this.game !== null;
     }
 
+    // Method to handle rematch requests
+    handleRematchRequest(player) {
+        if (!this.rematchRequested.includes(player)) {
+            this.rematchRequested.push(player);
+        }
+        // Check if all players requested a rematch
+        if (this.rematchRequested.length === this.roomSize) {
+            this.startGame(); // Restart the game with a new instance
+            this.rematchRequested = []; // Clear rematch requests
+            return true; // Rematch started
+        }
+        return false; // Waiting for the other player
+    }
+
     // Start a new game
     startGame() {
         this.game = new Game();
+        this.status = 'active';
+        // Ensure to reset any rematch state
+        this.rematchRequested = [];
     }
 
     // Check if all players in the room are ready
     areAllReady() {
-        if(this.numPlayers !== this.roomSize)
-        return false
+        if (this.numPlayers !== this.roomSize)
+            return false
         return this.playersInRoom.every(({ player, status }) => {
             return status === 'Ready';
         });

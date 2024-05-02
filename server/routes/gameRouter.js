@@ -40,5 +40,10 @@ router.get("/ready", async function (req, res, next) {
 router.get("/waitTurn", async function (req, res, next) {
   routerFunction.waitTurn(req, res, rooms);
 });
+/* Route for client to ask for a rematch. Both players must agree to a rematch for a new game. */
+router.get("/rematch", function (req, res) {
+  routerFunction.rematch(req, res, rooms);
+});
+
 
 module.exports = router;

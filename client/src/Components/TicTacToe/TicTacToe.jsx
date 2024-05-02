@@ -24,6 +24,7 @@ export const TicTacToe = () => {
     useState(false); /* Player 1 defaults to false*/
   /* Runs the waitForYourTurn Function every 5 sec. */
   // let intervalID = setInterval(winner === '' ? waitForYourTurn : null, 5000)
+  const [rematchRequested, setRematchRequested] = useState(false);
 
   useEffect(() => {
     console.log("Hey");
@@ -82,6 +83,15 @@ export const TicTacToe = () => {
       });
   }
 
+  useEffect(() => {
+    return () => {
+      if (intervalID) {
+        clearInterval(intervalID);
+      }
+    };
+  }, [intervalID]);
+  
+
   /* TO DO: Currently resets all rooms to null. Does not work properly and should only reset the current room to play again. */
   function reset() {
     // Reset all states and call the reset endpoint
@@ -102,6 +112,38 @@ export const TicTacToe = () => {
     });
   }
 
+  const handleRematchRequest = async () => {
+    // Change button state to 'waiting'
+    setRematchRequested(true);
+    setGameMessage('Waiting for the other player...');
+  
+    // API call to server to request rematch
+    const response = await fetch('http://localhost:3001/game/rematch/', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = await response.json();
+  
+    if (data.message === 'Rematch started') {
+      // Rematch is agreed by both players, reset the board
+      resetBoard();
+    } else {
+      // Waiting for the other player to agree to rematch
+      setGameMessage(data.message);
+    }
+  };
+  
+  const resetBoard = () => {
+    // Reset the board for a new game
+    setGrid([["", "", ""], ["", "", ""], ["", "", ""]]);
+    setWinner('');
+    setPlayerTurn(false); // or true, depending on who should start the new game
+    setGameMessage('');
+    setRematchRequested(false); // Reset rematch state
+  };
+  
   // Function that runs on defined time interval to retrieve data changes from server, and decide whose turn it is
   async function waitForYourTurn() {
     // if (roomID === null) {
@@ -299,6 +341,17 @@ export const TicTacToe = () => {
       <button className="game-button" disabled={isReady} onClick={startGame}>
         Ready
       </button>
+      {winner && !rematchRequested && (
+  <button className="game-button" onClick={handleRematchRequest}>
+    Rematch?
+  </button>
+)}
+
+{rematchRequested && (
+  <div className="gameMessage">
+    Waiting for the other player to accept the rematch...
+  </div>
+)}
     </div>
   );
 };
