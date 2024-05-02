@@ -1,10 +1,3 @@
-const multer = require('multer');
-// Set up Multer storage in memory
-const storage = multer.memoryStorage();
-// const FormData = require('form-data');
-
-// Initialize Multer
-const upload = multer({ storage: storage });
 /** This file contains all the logic to transcribe text into acceptable values for playing the Tic Talk Toe game */
 const transcribeText = require('../audio/OpenAI-API')
 
@@ -35,7 +28,7 @@ async function convertAudioToMove (audioUrl, audio) {
           numMatches ++;
         }
       })
-      /* A matching word was found, return they key. So if user says Lower middle, then the returned value would be C1*/
+      /* A matching word was found, return the key. So if user says Lower middle, then the returned value would be C1*/
       if(numMatches > 0 ){
         matchedKey = wordMatched
       }

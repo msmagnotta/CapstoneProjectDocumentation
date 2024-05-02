@@ -104,7 +104,12 @@ export const TicTacToe = () => {
         if (res.winner !== "") {
           setWinner(res.winner);
         }
+        
         waitForYourTurn();
+      }
+      else {
+        console.log(res)
+        setTranscription(res.transcription)
       }
     });
   }

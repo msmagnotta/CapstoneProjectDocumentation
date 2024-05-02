@@ -28,35 +28,16 @@ router.post(
       return res.status(400).json({ message: "No body submitted" });
     }
     console.log(`Post /audio/move `);
-    console.log(req.body)
-    // const response = await axios.get(req.body.voiceUrl, { responseType: 'arraybuffer' });
-    // const voiceData = response.data;
-	// const voiceReadable = new Readable();
-	// voiceReadable.push(voiceData);
-	// voiceReadable.push(null);
-    // console.log(req.file)
-    // let room = findPlayerRoom(req.headers.origin, rooms);
-    // /** Possible values 'click', 'audio' */
-    // /* Checks if client is inside a room */
-    // if (room === undefined) {
-    //   console.log("Player not in a room");
-    //   res.status("200").json({ message: "Player not in in a room" });
-    //   return;
-    // }
-    // let game = room.game;
-    // if (Object.keys(req.body).length === 0) {
-    //   res.status(207).json({ message: "Error, body is empty" });
-    //   return;
-    // }
-    // console.log(req.file.constructor.name)
-    const transcribedText =await transcribeText(audioUrl, audio)
+    const transcribedText =await transcribeText(req.body.voiceUrl, req.file)
     const move = await convertAudioToMove(req.body.voiceUrl, req.file)
+    console.log(move)
     if (move === null) {
       console.log("Could not detect valid moves, try again");
       res
         .status(201)
         .json({
           message: "Could not detect valid moves, try again",
+          transcription: transcribedText,
           playerTurn: true,
         });
       return;
