@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/routes/gameRouter.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/routes/gameRouter.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/**
+ * @file Defines routes for handling game-related requests.
+ * @module gameRouter
+ */
+
+const express = require("express");
+const routerFunction = require("../modules/gameRouterFunctions");
+const Game = require("../modules/Game");
+const Room = require("../modules/Room");
+const uuid = require("uuid");
+let { createTopic, produceMessage, consumeMessages } = require('../kafka/kafkaService');
+
+/** 
+ * Turn this value to true to enable kafka commands 
+ */
+const enableKafka = false
+
+const router = express.Router();
+
+let globalRoomId = null;
+let rooms = []; /* Stores Room objects*/
+
+/**
+ * Route for the root endpoint.
+ * @name GET/
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+router.get("/", async function (req, res, next) {});
+
+/**
+ * Route for processing player moves.
+ * @name POST/move
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+router.post("/move", async function (req, res, next) {
+  if(routerFunction.move(req, res, rooms) === true){
+    if(enableKafka){
+      produceMessage(globalRoomId, 'key1', "Player " + req.headers.origin + " selected " + req.body.move)
+    } 
+  }
+});
+
+/**
+ * Route for resetting the game.
+ * @name GET/reset
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+router.get("/reset", function (req, res, next) {
+  console.log("GET /reset");
+  
+  if(enableKafka){
+    produceMessage(globalRoomId, 'key1', "Game Reset")
+  }
+  rooms = [];
+  routerFunction.reset(req,res,rooms)
+});
+
+/**
+ * Route for players to join a room.
+ * @name GET/join
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+router.get("/join", async function (req, res, next) {
+  routerFunction.join(req, res, rooms);
+});
+
+/**
+ * Route for setting player status as ready.
+ * @name GET/ready
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+router.get("/ready", async function (req, res, next) {
+  const readyStatus = routerFunction.ready(req, res, rooms);
+  let newGame = !(readyStatus === undefined)
+  if (newGame &amp;&amp; enableKafka) {
+    globalRoomId = readyStatus
+    await createTopic(globalRoomId)
+    consumeMessages(globalRoomId)
+    produceMessage(globalRoomId, 'key1', "Game Started")
+  }
+});
+
+/**
+ * Route for updating clients and waiting for turns.
+ * @name GET/waitTurn
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+router.get("/waitTurn", async function (req, res, next) {
+  console.log("GET /waitTurn")
+  potentialWinner = routerFunction.waitTurn(req, res, rooms)
+
+  if(potentialWinner !== undefined &amp;&amp; enableKafka) {
+    produceMessage(globalRoomId, 'key1', "Player " + potentialWinner + " Wins!")
+  }
+});
+
+/**
+ * Route for getting real-time information about rooms.
+ * @name GET/rooms
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
+router.get('/rooms', async function(req,res,next){
+  res.json(rooms)
+})
+
+const gameRouter=router
+module.exports = {gameRouter, rooms};
+</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-AudioTranscription.html">AudioTranscription</a></li><li><a href="module-Game.html">Game</a></li><li><a href="module-OpenAI_API.html">OpenAI_API</a></li><li><a href="module-Room.html">Room</a></li><li><a href="module-User.html">User</a></li><li><a href="module-app.html">app</a></li><li><a href="module-audioRouter.html">audioRouter</a></li><li><a href="module-gameRouter.html">gameRouter</a></li><li><a href="module-gameRouterFunctions.html">gameRouterFunctions</a></li><li><a href="module-index.html">index</a></li><li><a href="module-indexRouter.html">indexRouter</a></li><li><a href="module-jest-dom-imports.html">jest-dom-imports</a></li><li><a href="module-kafkaService.html">kafkaService</a></li><li><a href="module-reportWebVitals.html">reportWebVitals</a></li><li><a href="module-usersRouter.html">usersRouter</a></li><li><a href="module-v2verifyRouter.html">v2verifyRouter</a></li></ul><h3>Classes</h3><ul><li><a href="module-Game-Game.html">Game</a></li><li><a href="module-Room-Room.html">Room</a></li><li><a href="module-User-User.html">User</a></li></ul><h3>Global</h3><ul><li><a href="global.html#audioBlobs">audioBlobs</a></li><li><a href="global.html#cancel">cancel</a></li><li><a href="global.html#mediaRecorder">mediaRecorder</a></li><li><a href="global.html#resetRecordingProperties">resetRecordingProperties</a></li><li><a href="global.html#start">start</a></li><li><a href="global.html#stop">stop</a></li><li><a href="global.html#streamBeingCaptured">streamBeingCaptured</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Tue May 07 2024 18:47:47 GMT-0500 (Central Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
