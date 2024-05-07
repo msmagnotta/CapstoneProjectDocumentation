@@ -1,24 +1,47 @@
+/**
+ * @file Defines routes for handling game-related requests.
+ * @module gameRouter
+ */
+
 const express = require("express");
 const routerFunction = require("../modules/gameRouterFunctions");
 const Game = require("../modules/Game");
 const Room = require("../modules/Room");
 const uuid = require("uuid");
 let { createTopic, produceMessage, consumeMessages } = require('../kafka/kafkaService');
-/** Turn this value to true to enable kafka commands */
-const enableKafka = false
-const router = express.Router();
 
+/** 
+ * Turn this value to true to enable kafka commands 
+ */
+const enableKafka = false
+
+const router = express.Router();
 
 let globalRoomId = null;
 let rooms = []; /* Stores Room objects*/
-/* Finds the next available room by finding the first non full room */
 
-/* NOTHING HERE. May Change*/
+/**
+ * Route for the root endpoint.
+ * @name GET/
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 router.get("/", async function (req, res, next) {});
 
-/* Post Route /move used to process client move
-   Requires the player to already be in a room
-   Requires move sent through Post body */
+/**
+ * Route for processing player moves.
+ * @name POST/move
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 router.post("/move", async function (req, res, next) {
   if(routerFunction.move(req, res, rooms) === true){
     if(enableKafka){
@@ -27,23 +50,50 @@ router.post("/move", async function (req, res, next) {
   }
 });
 
-/* reset Every room. TO DO: Only reset current game. */
+/**
+ * Route for resetting the game.
+ * @name GET/reset
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 router.get("/reset", function (req, res, next) {
   console.log("GET /reset");
   
   if(enableKafka){
     produceMessage(globalRoomId, 'key1', "Game Reset")
-
   }
   rooms = [];
   routerFunction.reset(req,res,rooms)
 });
 
-/* Route for client to join a room. Required before starting a game. */
+/**
+ * Route for players to join a room.
+ * @name GET/join
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 router.get("/join", async function (req, res, next) {
   routerFunction.join(req, res, rooms);
 });
-/* Route for client to set his status as ready. Once the two players are marked as ready, the game is created and can be played */
+
+/**
+ * Route for setting player status as ready.
+ * @name GET/ready
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 router.get("/ready", async function (req, res, next) {
   const readyStatus = routerFunction.ready(req, res, rooms);
   let newGame = !(readyStatus === undefined)
@@ -54,10 +104,17 @@ router.get("/ready", async function (req, res, next) {
     produceMessage(globalRoomId, 'key1', "Game Started")
   }
 });
-/* Main route to update clients every time interval defined in the client source file.
-   The idea is that every T time, client makes a call to this route in order to retrieve the current state of the game. 
-   This route is also used after a user makes a move, in order to wait for his turn.
-   The player turn is determined based on the index of the player inside the room. */
+
+/**
+ * Route for updating clients and waiting for turns.
+ * @name GET/waitTurn
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 router.get("/waitTurn", async function (req, res, next) {
   console.log("GET /waitTurn")
   potentialWinner = routerFunction.waitTurn(req, res, rooms)
@@ -67,12 +124,19 @@ router.get("/waitTurn", async function (req, res, next) {
   }
 });
 
-/* To do: Disconnect user after idle time so we can delete rooms.*/
-/* To do: Delete everyroom that have 0 players every 1 hour *
-/* To do: ask for a rematch? Need specific route listening for that request, so that we can update states in client and restart the waitTurn calls.*/
-/* Testing route to get real time information about the variable Rooms */
+/**
+ * Route for getting real-time information about rooms.
+ * @name GET/rooms
+ * @function
+ * @memberof module:gameRouter
+ * @inner
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 router.get('/rooms', async function(req,res,next){
   res.json(rooms)
 })
+
 const gameRouter=router
 module.exports = {gameRouter, rooms};

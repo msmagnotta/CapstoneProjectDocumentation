@@ -1,17 +1,37 @@
+/**
+ * @file This is the main entry point of the client application.
+ * @module index
+ */
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 
+/**
+ * Root element to render the React application.
+ * @type {ReactDOM.Root}
+ */
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+/**
+ * Render the application.
+ * @param {React.ReactElement} component - The root React component of the application.
+ */
+const renderApp = (component) => {
+  root.render(
+    <React.StrictMode>
+      {component}
+    </React.StrictMode>
+  );
+};
+
+// Render the main application
+renderApp(<App />);
+
+/**
+ * Measure and report web vital performance metrics.
+ * @see {@link https://bit.ly/CRA-vitals} More information about measuring performance.
+ */
 reportWebVitals();

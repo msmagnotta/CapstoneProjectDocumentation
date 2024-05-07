@@ -1,3 +1,8 @@
+/**
+ * @file Main application file responsible for setting up the server and routing.
+ * @module app
+ */
+
 const express = require("express");
 const kafkaService = require("./kafka/kafkaService");
 const indexRouter = require("./routes/index");
@@ -52,8 +57,18 @@ if (enableKafka) {
   });
 }
 
+/**
+ * Route for handling V2Verify voice-related requests.
+ * @name /voice
+ * @function
+ * @memberof module:app
+ * @inner
+ */
 app.use("/voice", v2verifyRouter);
 
+/**
+ * Start the server and listen on the specified port.
+ */
 app.listen(port, () =>
   console.log("Example app is listening on port " + port + ".")
 );

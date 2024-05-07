@@ -1,8 +1,17 @@
 /**
-* Represents a Tic Tac Toe Game
-* @class
-*/
+ * @file Represents a Tic Tac Toe game module.
+ * @module Game
+ */
+
+/**
+ * Represents a Tic Tac Toe Game.
+ * @class
+ */
 class Game {
+    /**
+     * Create a Tic Tac Toe game.
+     * @constructor
+     */
     constructor() {
         this.state = {
             grid: [['', '', ''],     /*A0 A1 A2 */
@@ -11,40 +20,39 @@ class Game {
             ],
             playerTurn: false,
             isOver: false
-        }
+        };
     }
 
     /**
-     * @returns the state of the Game class instance
+     * Gets the state of the Game class instance.
+     * @returns {Object} The state of the Game class instance.
      */
     get gameState() {
-        return this.state
+        return this.state;
     }
 
     /**
-     * Sets the state of the Game class instance
+     * Sets the state of the Game class instance.
+     * @param {Object} newState - The new state to set.
      */
     set setGameState(newState) {
-        this.state = newState
+        this.state = newState;
     }
 
-    /*
-    * Correlates symbol with player url
-    */
     // setPlayers(symbol, playerUrl){
     //     this.state.players[symbol] = playerUrl
     // }
 
     /**
-     * Displays the Game class's grid 
+     * Displays the grid of the Tic Tac Toe game.
      */
     displayGrid() {
-        const grid = this.state.grid
+        const grid = this.state.grid;
         for (let i = 0; i < 3; i++) {
             let row = '';
             for (let j = 0; j < 3; j++) {
                 if (grid[i][j] === '') {
-                    row += `   `
+                    row += `   `;
                 } else {
                     row += ` ${grid[i][j]} `;
                 }
@@ -61,103 +69,92 @@ class Game {
     }
 
     /**
-     * Places mark on the Game class's grid 
-     * @param {Integer} x - x value of spot on grid that is marked
-     * @param {Integer} y - y value of spot on grid that is marked
-     * @param {String} mark - "X" or "O" depending on who's turn it is
+     * Places a mark on the grid of the Tic Tac Toe game.
+     * @param {number} x - The x-coordinate of the spot on the grid.
+     * @param {number} y - The y-coordinate of the spot on the grid.
+     * @param {string} mark - The mark to place ('X' or 'O').
      */
     setGridTile(x, y, mark) {
-        this.state.grid[x][y] = mark
+        this.state.grid[x][y] = mark;
     }
 
     /**
-   * Translates user's intended move from cell coordinates to X, Y coodinmates
-   * @param {String} movestring - String representing cell coordinates
-   * @returns {Array} [x, y] coordinates of user's intended move
-   */
+     * Translates user's intended move from cell coordinates to X, Y coordinates.
+     * @param {string} moveString - String representing cell coordinates (e.g., 'A1', 'B2').
+     * @returns {Array} An array containing X, Y coordinates of the user's intended move.
+     */
     translateMove(moveString) {
-        let gridMove = []
+        let gridMove = [];
         switch (moveString) {
             case 'A0':
-                gridMove = [0, 0]
-                break
+                gridMove = [0, 0];
+                break;
             case 'A1':
-                gridMove = [0, 1]
-                break
+                gridMove = [0, 1];
+                break;
             case 'A2':
-                gridMove = [0, 2]
-                break
+                gridMove = [0, 2];
+                break;
             case 'B0':
-                gridMove = [1, 0]
-                break
+                gridMove = [1, 0];
+                break;
             case 'B1':
-                gridMove = [1, 1]
-                break
+                gridMove = [1, 1];
+                break;
             case 'B2':
-                gridMove = [1, 2]
-                break
+                gridMove = [1, 2];
+                break;
             case 'C0':
-                gridMove = [2, 0]
-                break
+                gridMove = [2, 0];
+                break;
             case 'C1':
-                gridMove = [2, 1]
-                break
+                gridMove = [2, 1];
+                break;
             case 'C2':
-                gridMove = [2, 2]
-                break
-
+                gridMove = [2, 2];
+                break;
             default:
-                break
+                break;
         }
-        return gridMove
-
+        return gridMove;
     }
 
     /**
-     * Checks if the user's intended move is valid
-     * @param {Array} move - [X, Y] coordinates representing where user intends to mark
-     * @returns {boolean} - Whether user's move is valid (true) or not (false)
+     * Checks if the user's intended move is valid.
+     * @param {Array} move - An array containing X, Y coordinates representing the user's intended move.
+     * @returns {boolean} Whether the user's move is valid (true) or not (false).
      */
     isMoveAllowed(move) {
-        console.log(move)
-        let gridCell = this.state.grid[move[0]][move[1]]
-        // console.log(this.state.grid[move[0]][move[1]])
+        let gridCell = this.state.grid[move[0]][move[1]];
         if (gridCell.length === 0) {
-            console.log("Move Allowed")
-            return true
-        }
-        else {
-            console.log("Move not allowed because tile not empty");
-            return false
+            return true;
+        } else {
+            return false;
         }
     }
 
     /**
-     * Calls setGridTile func for the right player ('X' or 'O')
-     * @param {Array} move - [X, Y] coordinates representing where user intends to mark
+     * Places the mark on the grid for the current player ('X' or 'O').
+     * @param {Array} move - An array containing X, Y coordinates representing the user's intended move.
      */
     setAcceptedMove(move) {
         if (this.state.playerTurn) { /* Player X */
-            this.setGridTile(move[0], move[1], 'X')
+            this.setGridTile(move[0], move[1], 'X');
         } else { /* Player O */
-            this.setGridTile(move[0], move[1], 'O')
+            this.setGridTile(move[0], move[1], 'O');
         }
-
-
     }
 
     /**
-     * Checks the winner by comparing grid value equivalence
-     * @returns Winner ('X' or 'O') or 'Tie' if all spaces are filled 
+     * Checks the winner of the Tic Tac Toe game.
+     * @returns {string|null} The winner ('X' or 'O') or 'Tie' if all spaces are filled.
      */
     checkWinner() {
-        const grid = this.state.grid
+        const grid = this.state.grid;
         // Check rows and columns
         for (let i = 0; i < 3; i++) {
             // Check rows
-                
             if (grid[i][0] === grid[i][1] && grid[i][1] === grid[i][2] && grid[i][0] !== '') {
-                // console.log('WInner is ' + grid[i][0])
                 return grid[i][0]; // Return the winner ('X' or 'O')
             }
 
@@ -187,28 +184,26 @@ class Game {
     }
 
     /**
-     * Uses other functions in this class to handle whole move process
-     * @param {String} moveString - Cell Coordinates representing where user wants to mark (ex: 'A1', 'B2')
-     * @returns {boolean} - true if turn was valid and processed, false otherwise
+     * Handles the turn of the Tic Tac Toe game.
+     * @param {string} moveString - String representing cell coordinates (e.g., 'A1', 'B2').
+     * @returns {boolean} Whether the turn was valid and processed (true) or not (false).
      */
     handleTurn(moveString) {
-
-        const move = this.translateMove(moveString)
-        const isAllowed = this.isMoveAllowed(move)
+        const move = this.translateMove(moveString);
+        const isAllowed = this.isMoveAllowed(move);
 
         if (isAllowed) {
-            this.setAcceptedMove(move, this.state.playerTurn)
+            this.setAcceptedMove(move);
+        } else {
+            return false;
         }
-        else {
-            return false
-        }
-        console.log(this.checkWinner());
-        if (this.checkWinner() !== null) {
-            this.state.isOver = true
-        }
-        this.state.playerTurn = !this.state.playerTurn
-        return true
-    }
 
+        if (this.checkWinner() !== null) {
+            this.state.isOver = true;
+        }
+        this.state.playerTurn = !this.state.playerTurn;
+        return true;
+    }
 }
-module.exports = Game
+
+module.exports = Game;

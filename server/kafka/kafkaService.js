@@ -1,5 +1,20 @@
+/**
+ * @file This module provides functions for interacting with Kafka.
+ * @module kafkaService
+ */
+
 const { Kafka } = require('kafkajs');
 
+/**
+ * Kafka client configuration.
+ * @type {Object}
+ * @property {string} clientId - Client ID used to identify the Kafka client.
+ * @property {string[]} brokers - Array of broker addresses.
+ * @property {Object} sasl - SASL authentication configuration.
+ * @property {string} sasl.mechanism - SASL mechanism for authentication.
+ * @property {string} sasl.username - Username for authentication.
+ * @property {string} sasl.password - Password for authentication.
+ */
 const kafka = new Kafka({
     clientId: 'tictalktoe',
     brokers: ['192.168.67.2:30005'],
@@ -10,28 +25,52 @@ const kafka = new Kafka({
     },
 });
 
-/* Producer instance */
+/**
+ * Kafka producer instance.
+ * @type {Producer}
+ */
 const producer = kafka.producer();
-/* Consumer instance */
+
+/**
+ * Kafka consumer instance.
+ * @type {Consumer}
+ */
 const consumer = kafka.consumer({ groupId: 'tictactoe-game-group' });
-/* Admin instance for managing topics */
+
+/**
+ * Kafka admin instance for managing topics.
+ * @type {Admin}
+ */
 const admin = kafka.admin();
 
-
-/* Connect the producer and consumer */
+/**
+ * Connects the Kafka producer and consumer.
+ * @async
+ * @function connectKafka
+ */
 const connectKafka = async () => {
     await producer.connect();
     await consumer.connect();
 }
 
-/* Function to delete a topic */
+/**
+ * Deletes a Kafka topic.
+ * @async
+ * @function deleteTopic
+ * @param {string} topicName - The name of the topic to delete.
+ */
 async function deleteTopic(topicName) {
     await admin.deleteTopics({
         topics: [topicName]
     })
 }
 
-/* Function to create a new topic */
+/**
+ * Creates a new Kafka topic.
+ * @async
+ * @function createTopic
+ * @param {string} topicName - The name of the topic to create.
+ */
 async function createTopic(topicName) {
     try {
         await admin.connect();
@@ -50,7 +89,14 @@ async function createTopic(topicName) {
     }
 }
 
-/* Function to produce a message to a topic */
+/**
+ * Produces a message to a Kafka topic.
+ * @async
+ * @function produceMessage
+ * @param {string} topic - The topic to which the message will be sent.
+ * @param {string} keyInput - The key of the message.
+ * @param {string} valueInput - The value of the message.
+ */
 const produceMessage = async (topic, keyInput, valueInput) => {
     await producer.send({
         topic,
@@ -60,8 +106,12 @@ const produceMessage = async (topic, keyInput, valueInput) => {
     });
 }
 
-
-/* Function to consume messages from a topic */
+/**
+ * Consumes messages from a Kafka topic.
+ * @async
+ * @function consumeMessages
+ * @param {string} topic - The topic from which messages will be consumed.
+ */
 const consumeMessages = async (topic) => {
     await consumer.subscribe({ topic, fromBeginning: true });
     await consumer.run({
@@ -77,7 +127,11 @@ const consumeMessages = async (topic) => {
     });
 }
 
-/* Function to disconnect Kafka clients */
+/**
+ * Disconnects Kafka clients.
+ * @async
+ * @function disconnectKafka
+ */
 const disconnectKafka = async () => {
     console.log('Disconnecting Kafka client...');
     if (consumer) {
