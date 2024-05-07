@@ -1,0 +1,14 @@
+{
+  "name": "capstoneproject",
+  "version": "1.0.0",
+  "description": "This repository hosts our code for our Capstone Project. Our sponsor, Northrop Grumman, has tasked us with creating a Voice Recognition/Identification application that allows user to play multiplayer games using voice commands.",
+  "main": "index.js",
+  "scripts": {
+    "jsdoc": "jsdoc -c jsdoc.json"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jsdoc": "^4.0.2"
+  }
+}
